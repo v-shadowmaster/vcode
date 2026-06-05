@@ -1,15 +1,21 @@
-import { createCliRenderer } from '@opentui/core';
+import { Box, createCliRenderer } from '@opentui/core';
 import { createRoot } from '@opentui/react';
 import './geist-text';
+import { Header } from './components/header';
+import { StatusBar } from './components/status-bar';
 
 function App() {
   return (
-    <box alignItems="center" justifyContent="center" flexGrow={1}>
-      <box justifyContent="center" alignItems="flex-end">
-        {/* variant="solid" = pure font look, variant="ascii" = ascii-art shading */}
-        <geist-text text="VINAY KUMAR" color="gray" rows={4} variant="solid" />
-        <textarea focused />
-      </box>
+    <box
+      alignItems="center"
+      justifyContent="center"
+      backgroundColor="#0a0a0a"
+      width="100%"
+      height="100%"
+      gap={2}
+    >
+      <Header />
+      <StatusBar />
     </box>
   );
 }
