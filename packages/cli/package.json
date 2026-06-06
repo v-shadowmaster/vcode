@@ -9,7 +9,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^25.9.1",
-    "@types/opentype.js": "^1.3.10"
+    "@types/opentype.js": "^1.3.10",
+    "@types/react": "^19"
   },
   "peerDependencies": {
     "typescript": "^5"
