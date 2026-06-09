@@ -18,6 +18,7 @@ import { EmptyBorder } from './border';
 import { CommandMenu } from './commands-menu';
 import { useToast } from '../providers/toast';
 import { useKeyboardLayer } from '../providers/keyboad-layer';
+import { useDialog } from '../providers/dialog';
 
 type Props = {
   onSubmit: (text: string) => void;
@@ -35,6 +36,7 @@ export function InputBar({ onSubmit, disabled = false }: Props) {
   const onSubmitRef = useRef<() => void>(() => {});
   const renderer = useRenderer();
   const toast = useToast();
+  const dialog = useDialog();
   const { isTopLayer, setResponder } = useKeyboardLayer();
 
   const {
@@ -92,12 +94,13 @@ export function InputBar({ onSubmit, disabled = false }: Props) {
         command.action({
           exit: () => renderer.destroy(),
           toast,
+          dialog,
         });
       } else {
         textarea.insertText(command.value + ' ');
       }
     },
-    [renderer, toast]
+    [renderer, toast, dialog]
   );
 
   const handleSubmit = useCallback(() => {
