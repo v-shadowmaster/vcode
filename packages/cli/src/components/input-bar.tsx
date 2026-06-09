@@ -16,7 +16,8 @@ import {
 import { StatusBar } from './status-bar';
 import { EmptyBorder } from './border';
 import { CommandMenu } from './commands-menu';
-import { useToast } from './providers/toast';
+import { useToast } from '../providers/toast';
+import { useKeyboardLayer } from '../providers/keyboad-layer';
 
 type Props = {
   onSubmit: (text: string) => void;
@@ -34,6 +35,7 @@ export function InputBar({ onSubmit, disabled = false }: Props) {
   const onSubmitRef = useRef<() => void>(() => {});
   const renderer = useRenderer();
   const toast = useToast();
+  const { isTopLayer, setResponder } = useKeyboardLayer();
 
   const {
     showCommandMenu,
@@ -53,6 +55,22 @@ export function InputBar({ onSubmit, disabled = false }: Props) {
       onSubmitRef.current();
     };
   }, []);
+
+  // Register the base layer responder for ctrl+c dismissal
+  useEffect(() => {
+    setResponder('base', () => {
+      if (disabled) return false;
+
+      const textarea = textareaRef.current;
+      if (textarea && textarea.plainText.length > 0) {
+        textarea.setText('');
+        return true;
+      }
+      return false;
+    });
+
+    return () => setResponder('base', null);
+  }, [disabled, setResponder]);
 
   const handleTextareaContentChange = useCallback(() => {
     const textarea = textareaRef.current;
@@ -155,7 +173,12 @@ export function InputBar({ onSubmit, disabled = false }: Props) {
         <textarea
           ref={textareaRef}
           flexGrow={1}
-          focused={!disabled}
+          focused={
+            !disabled &&
+            (isTopLayer('base') ||
+              isTopLayer('command') ||
+              isTopLayer('mention'))
+          }
           placeholder={`Ask anything... Let's build the next big thing`}
           keyBindings={TEXTAREA_KEY_BINDINGS}
           onSubmit={handleSubmit}
