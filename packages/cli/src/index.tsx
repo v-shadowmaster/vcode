@@ -3,29 +3,32 @@ import { createRoot } from '@opentui/react';
 import './geist-text';
 import { Header } from './components/header';
 import { InputBar } from './components/input-bar';
+import { ToastProvider } from './components/providers/toast';
 
 function App() {
   return (
-    <box
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      backgroundColor="#0a0a0a"
-      width="100%"
-      height="100%"
-    >
-      {/* One shared, centered column so the header and input share the same bounds */}
+    <ToastProvider>
       <box
         flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="#0a0a0a"
         width="100%"
-        maxWidth={78}
-        paddingX={2}
-        gap={2}
+        height="100%"
       >
-        <Header />
-        <InputBar onSubmit={() => {}} />
+        {/* One shared, centered column so the header and input share the same bounds */}
+        <box
+          flexDirection="column"
+          width="100%"
+          maxWidth={78}
+          paddingX={2}
+          gap={2}
+        >
+          <Header />
+          <InputBar onSubmit={() => {}} />
+        </box>
       </box>
-    </box>
+    </ToastProvider>
   );
 }
 
