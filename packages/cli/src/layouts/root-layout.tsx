@@ -1,10 +1,9 @@
 import { Outlet } from 'react-router';
 import { ToastProvider } from '../providers/toast';
 import { DialogProvider } from '../providers/dialog';
-import { KeyboardLayerProvider } from '../providers/keyboard-layer';
+import { KeyboardLayerProvider } from '../providers/keyboad-layer';
 import { ThemeProvider } from '../providers/theme';
 import { ThemedRoot } from './themed-root';
-import { PromptConfigProvider } from '../providers/prompt-config';
 
 export function RootLayout() {
   return (
@@ -12,11 +11,9 @@ export function RootLayout() {
       <ToastProvider>
         <KeyboardLayerProvider>
           <DialogProvider>
-            <PromptConfigProvider>
-              <ThemedRoot>
-                <Outlet />
-              </ThemedRoot>
-            </PromptConfigProvider>
+            <ThemedRoot>
+              <Outlet />
+            </ThemedRoot>
           </DialogProvider>
         </KeyboardLayerProvider>
       </ToastProvider>
