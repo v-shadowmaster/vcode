@@ -4,6 +4,7 @@ import './geist-text';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { RootLayout } from './layouts/root-layout';
 import { Home } from './screens/home';
+import { NewSession } from './screens/new-session';
 
 const router = createMemoryRouter([
   {
@@ -16,11 +17,7 @@ const router = createMemoryRouter([
       },
       {
         path: 'sessions/new',
-        element: (
-          <box>
-            <text>sessions</text>
-          </box>
-        ),
+        element: <NewSession />,
       },
       {
         path: 'sessions/:id',
