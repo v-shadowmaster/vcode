@@ -1,9 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { Header } from '../components/header';
-import { InputBar } from '../components/input-bar';
-import { TextAttributes } from '@opentui/core';
 import { useTheme } from '../providers/theme';
+import { ErrorMessage } from '../components/messages';
 
 export function NewSession() {
   const navigate = useNavigate();
@@ -32,6 +30,7 @@ export function NewSession() {
     >
       <text>creating session............</text>
       <text>{state.message}</text>
+      <ErrorMessage message="oops mother fucker" />
     </box>
   );
 }
