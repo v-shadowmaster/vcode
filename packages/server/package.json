@@ -1,0 +1,22 @@
+{
+    "name": "@vcode/server",
+    "type": "module",
+    "private": true,
+    "exports": {
+        ".": "./src/server.ts"
+    },
+    "scripts": {
+        "dev:server": "bun --watch ./src/server.ts"
+    },
+    "dependencies": {
+        "@vcode/shared": "workspace:*",
+        "cors": "^2.8.6",
+        "express": "^5.2.1",
+        "helmet": "^8.2.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "@types/helmet": "^4.0.0"
+    }
+}
