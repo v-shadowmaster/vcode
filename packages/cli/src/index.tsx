@@ -6,35 +6,38 @@ import { InputBar } from './components/input-bar';
 import { ToastProvider } from './providers/toast';
 import { KeyboardLayerProvider } from './providers/keyboad-layer';
 import { DialogProvider } from './providers/dialog';
+import { ThemeProvider } from './providers/theme';
 
 function App() {
   return (
-    <KeyboardLayerProvider>
-      <DialogProvider>
-        <ToastProvider>
-          <box
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor="#0a0a0a"
-            width="100%"
-            height="100%"
-          >
-            {/* One shared, centered column so the header and input share the same bounds */}
+    <ThemeProvider>
+      <KeyboardLayerProvider>
+        <DialogProvider>
+          <ToastProvider>
             <box
               flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor="#0a0a0a"
               width="100%"
-              maxWidth={78}
-              paddingX={2}
-              gap={2}
+              height="100%"
             >
-              <Header />
-              <InputBar onSubmit={() => {}} />
+              {/* One shared, centered column so the header and input share the same bounds */}
+              <box
+                flexDirection="column"
+                width="100%"
+                maxWidth={78}
+                paddingX={2}
+                gap={2}
+              >
+                <Header />
+                <InputBar onSubmit={() => {}} />
+              </box>
             </box>
-          </box>
-        </ToastProvider>
-      </DialogProvider>
-    </KeyboardLayerProvider>
+          </ToastProvider>
+        </DialogProvider>
+      </KeyboardLayerProvider>
+    </ThemeProvider>
   );
 }
 
