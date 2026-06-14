@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { RootLayout } from './layouts/root-layout';
 import { Home } from './screens/home';
 import { NewSession } from './screens/new-session';
+import { Session } from './screens/session';
 
 const router = createMemoryRouter([
   {
@@ -21,11 +22,7 @@ const router = createMemoryRouter([
       },
       {
         path: 'sessions/:id',
-        element: (
-          <box>
-            <text>sessions/id</text>
-          </box>
-        ),
+        element: <Session />,
       },
     ],
   },
