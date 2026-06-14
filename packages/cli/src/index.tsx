@@ -1,44 +1,41 @@
 import { createCliRenderer } from '@opentui/core';
 import { createRoot } from '@opentui/react';
 import './geist-text';
-import { Header } from './components/header';
-import { InputBar } from './components/input-bar';
-import { ToastProvider } from './providers/toast';
-import { KeyboardLayerProvider } from './providers/keyboad-layer';
-import { DialogProvider } from './providers/dialog';
-import { ThemeProvider } from './providers/theme';
+import { createMemoryRouter, RouterProvider } from 'react-router';
+import { RootLayout } from './layouts/root-layout';
+import { Home } from './screens/home';
+
+const router = createMemoryRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: 'sessions/new',
+        element: (
+          <box>
+            <text>sessions</text>
+          </box>
+        ),
+      },
+      {
+        path: 'sessions/:id',
+        element: (
+          <box>
+            <text>sessions/id</text>
+          </box>
+        ),
+      },
+    ],
+  },
+]);
 
 function App() {
-  return (
-    <ThemeProvider>
-      <KeyboardLayerProvider>
-        <DialogProvider>
-          <ToastProvider>
-            <box
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor="#0a0a0a"
-              width="100%"
-              height="100%"
-            >
-              {/* One shared, centered column so the header and input share the same bounds */}
-              <box
-                flexDirection="column"
-                width="100%"
-                maxWidth={78}
-                paddingX={2}
-                gap={2}
-              >
-                <Header />
-                <InputBar onSubmit={() => {}} />
-              </box>
-            </box>
-          </ToastProvider>
-        </DialogProvider>
-      </KeyboardLayerProvider>
-    </ThemeProvider>
-  );
+  return <RouterProvider router={router} />;
 }
 
 const renderer = await createCliRenderer({
