@@ -1,3 +1,4 @@
+import { TextAttributes } from '@opentui/core';
 import { useTheme } from '../../providers/theme';
 
 type Props = {
@@ -15,7 +16,7 @@ export function BotMessage({ content, model }: Props) {
           <text>{content}</text>
         </box>
         <box paddingY={1} width="100%">
-          {model}
+          <text attributes={TextAttributes.DIM}>{model}</text>
         </box>
       </box>
     </box>

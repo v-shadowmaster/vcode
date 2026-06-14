@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTheme } from '../providers/theme';
-import { ErrorMessage } from '../components/messages';
+import { BotMessage, ErrorMessage, UserMessage } from '../components/messages';
+import { SessionShell } from '../components/session-shell';
 
 export function NewSession() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { colors } = useTheme();
 
   const state = location.state as { message?: string } | null;
 
@@ -19,18 +19,13 @@ export function NewSession() {
   if (!state?.message) return null;
 
   return (
-    <box
-      alignItems="center"
-      justifyContent="center"
-      flexGrow={1}
-      gap={2}
-      position="relative"
-      width="100%"
-      height="100%"
-    >
-      <text>creating session............</text>
-      <text>{state.message}</text>
-      <ErrorMessage message="oops mother fucker" />
-    </box>
+    <SessionShell onSubmit={() => {}} inputDisabled loading>
+      <UserMessage message={state.message} />
+      <BotMessage
+        content="This is a sample bot response to demonstrate the message layout."
+        model="opus-4-6"
+      />
+      <ErrorMessage message="This is a sample error message." />
+    </SessionShell>
   );
 }
