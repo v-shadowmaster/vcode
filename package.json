@@ -5,7 +5,9 @@
         "packages/*"
     ],
     "scripts": {
-        "dev:cli": "bun run --watch packages/cli/src/index.tsx"
+        "dev": "bun run --filter '*' dev",
+        "dev:cli": "bun run --watch packages/cli/src/index.tsx",
+        "dev:server": "bun run --watch packages/server/src/server.ts"
     },
     "dependencies": {
         "geist": "^1.7.2"

@@ -6,19 +6,22 @@
         ".": "./src/server.ts"
     },
     "scripts": {
-        "dev:server": "bun --watch ./src/server.ts"
+        "dev": "bun --watch ./src/server.ts"
     },
     "dependencies": {
         "@vcode/shared": "workspace:*",
         "chalk": "^5.6.2",
+        "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
         "helmet": "^8.2.0",
-        "winston": "^3.19.0"
+        "winston": "^3.19.0",
+        "zod": "^4.4.3"
     },
     "devDependencies": {
         "@types/chalk": "^2.2.4",
+        "@types/cookie-parser": "^1.4.10",
         "@types/cors": "^2.8.19",
         "@types/express": "^5.0.6",
         "@types/helmet": "^4.0.0",
