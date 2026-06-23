@@ -6,7 +6,9 @@
         ".": "./src/server.ts"
     },
     "scripts": {
-        "dev": "bun --watch ./src/server.ts"
+        "dev": "bun --watch ./src/server.ts",
+        "start": "NODE_ENV=production bun ./src/server.ts",
+        "typecheck": "tsc --noEmit"
     },
     "dependencies": {
         "@vcode/shared": "workspace:*",
@@ -20,11 +22,10 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@types/chalk": "^2.2.4",
         "@types/cookie-parser": "^1.4.10",
         "@types/cors": "^2.8.19",
         "@types/express": "^5.0.6",
-        "@types/helmet": "^4.0.0",
-        "@types/winston": "^2.4.4"
+        "@types/node": "^24.10.1",
+        "typescript": "^5.9.3"
     }
 }

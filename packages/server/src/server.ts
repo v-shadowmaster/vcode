@@ -1,151 +1,87 @@
-import express, { type Request, type Response, type NextFunction } from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import logger from './utils/logger';
+import http from 'node:http';
+import type { AddressInfo, Socket } from 'node:net';
+import { config } from './config/env';
+import { logger, logError } from './utils/logger';
+import { printStartupBanner } from './utils/banner';
+import { createApp } from './app';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const SHUTDOWN_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
 
-// Load .env file from the root directory (parent of backend)
-const envPath = path.resolve(__dirname, '../../.env');
-if (fs.existsSync(envPath)) {
-    dotenv.config({ path: envPath });
-} else {
-    // Fallback to default behavior (looks in current working directory)
-    dotenv.config();
-}
+const resolveDisplayHost = (host: string): string =>
+  host === '0.0.0.0' || host === '::' ? 'localhost' : host;
 
-export async function createApp() {
-    const app = express();
-    app.set('trust proxy', 1);
-
-    app.use(
-        cors({
-            origin: true, // Allow all origins (matches Better Auth's trustedOrigins: ['*'])
-            credentials: true, // Allow cookies/credentials
-            exposedHeaders: ['Content-Range', 'Preference-Applied'],
-        })
-    );
-
-    app.use(cookieParser());
-
-    app.use((req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const originalSend = res.send;
-        const originalJson = res.json;
-
-        // Track response size
-        let responseSize = 0;
-
-        // Override send method
-        res.send = function (
-            data: string | Buffer | Record<string, unknown> | unknown[] | number | boolean
-        ) {
-            if (data !== undefined && data !== null) {
-                if (typeof data === 'string') {
-                    responseSize = Buffer.byteLength(data);
-                } else if (Buffer.isBuffer(data)) {
-                    responseSize = data.length;
-                } else if (typeof data === 'number' || typeof data === 'boolean') {
-                    responseSize = Buffer.byteLength(String(data));
-                } else {
-                    try {
-                        responseSize = Buffer.byteLength(JSON.stringify(data));
-                    } catch {
-                        // Handle circular references or unstringifiable objects
-                        responseSize = 0;
-                    }
-                }
-            }
-            return originalSend.call(this, data);
-        };
-
-        // Override json method
-        res.json = function (
-            data: Record<string, unknown> | unknown[] | string | number | boolean | null
-        ) {
-            if (data !== undefined) {
-                try {
-                    responseSize = Buffer.byteLength(JSON.stringify(data));
-                } catch {
-                    // Handle circular references or unstringifiable objects
-                    responseSize = 0;
-                }
-            }
-            return originalJson.call(this, data);
-        };
-
-        // Log after response is finished
-        res.on('finish', () => {
-            // Skip logging for logs endpoints to avoid infinite loops
-            if (req.path.includes('/logs/')) {
-                return;
-            }
-
-            const duration = Date.now() - startTime;
-            logger.info('HTTP Request', {
-                method: req.method,
-                path: req.path,
-                status: res.statusCode,
-                size: responseSize,
-                duration: `${duration}ms`,
-                ip: req.ip || req.socket.remoteAddress,
-                userAgent: req.headers['user-agent'],
-                timestamp: new Date().toISOString(),
-            });
-        });
-
-        next();
+const listen = (server: http.Server): Promise<void> =>
+  new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(config.PORT, config.HOST, () => {
+      server.off('error', reject);
+      resolve();
     });
+  });
 
-    // Create API router and mount all API routes under /api
-    const apiRouter = express.Router();
+const startServer = async (): Promise<void> => {
+  const startedAt = performance.now();
+  const server = http.createServer(createApp());
 
-    apiRouter.get('/health', (_req: Request, res: Response) => {
-        const version = process.env["VERSION"];
-        res.json({
-            status: 'ok',
-            version,
-            service: 'VCODE OSS Backend',
-            timestamp: new Date().toISOString(),
-        });
-    });
+  const sockets = new Set<Socket>();
+  server.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
+  });
 
-    // Mount all API routes under /api prefix
-    app.use('/api', apiRouter);
+  await listen(server);
+  server.on('error', (error) => logError('Server error', error));
 
-    return app;
-}
+  const { port } = server.address() as AddressInfo;
+  const url = `http://${resolveDisplayHost(config.HOST)}:${port}`;
 
-// Use PORT from config (already parsed from env, falls back to 7130)
-const PORT = process.env["PORT"] || 3000;
+  printStartupBanner({
+    url,
+    healthUrl: `${url}/api/health`,
+    startupMs: Math.round(performance.now() - startedAt),
+  });
 
-async function initializeServer() {
-    try {
-        const app = await createApp();
-        const server = app.listen(PORT, () => {
-            logger.info(`Backend API service listening on port ${PORT}`);
-        });
-    } catch (error) {
-        logger.error('Failed to initialize server', {
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-        });
+  let shuttingDown = false;
+  let finalExitCode = 0;
+  const shutdown = (reason: string, exitCode = 0): void => {
+    if (exitCode) finalExitCode = exitCode; // escalate before the idempotency guard
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logger.info(`Received ${reason}, shutting down gracefully`);
+
+    const forceExit = setTimeout(() => {
+      logError('Graceful shutdown timed out, forcing exit', new Error('shutdown timeout'));
+      sockets.forEach((socket) => socket.destroy());
+      process.exit(1);
+    }, config.SHUTDOWN_TIMEOUT_MS);
+    forceExit.unref();
+
+    server.close((error) => {
+      clearTimeout(forceExit);
+      if (error) {
+        logError('Error while closing server', error);
         process.exit(1);
-    }
-}
+        return;
+      }
+      logger.info('Server closed, goodbye');
+      process.exit(finalExitCode);
+    });
+  };
 
-void initializeServer();
+  // A crash leaves the process in an undefined state: stop serving traffic
+  // immediately instead of draining in-flight requests.
+  const crash = (reason: string, error: unknown): void => {
+    logError(reason, error);
+    sockets.forEach((socket) => socket.destroy());
+    shutdown(reason, 1);
+  };
 
-async function cleanup() {
-    logger.info('Shutting down gracefully...');
+  SHUTDOWN_SIGNALS.forEach((signal) => process.on(signal, () => shutdown(signal)));
+  process.on('uncaughtException', (error) => crash('Uncaught exception', error));
+  process.on('unhandledRejection', (reason) => crash('Unhandled promise rejection', reason));
+};
 
-    process.exit(0);
-}
-
-process.on('SIGINT', () => void cleanup());
-process.on('SIGTERM', () => void cleanup());
+void startServer().catch((error) => {
+  logError('Failed to start server', error);
+  process.exit(1);
+});
