@@ -1,0 +1,45 @@
+# Local development infrastructure for vcode.
+# Usage:
+#   docker compose up -d       # start Postgres + Redis in the background
+#   docker compose down        # stop (data is kept in named volumes)
+#   docker compose down -v     # stop and wipe all data
+#
+# Credentials default to dev values below and can be overridden via a root .env file.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: vcode-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vcode}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vcode}
+      POSTGRES_DB: ${POSTGRES_DB:-vcode}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vcode} -d ${POSTGRES_DB:-vcode}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: vcode-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
